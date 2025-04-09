@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+
+let seconds = 0;
+let isRunning = false;
+let interval = null;
 
 const formatTime = (seconds) => {
     const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -7,39 +11,45 @@ const formatTime = (seconds) => {
     return `${hours}:${minutes}:${secs}`;
 };
 
+const startCounter = (alertTime, updateUI) => {
+    if (isRunning) return;
+    isRunning = true;
+
+    interval = setInterval(() => {
+        seconds++;
+        updateUI();
+
+        if (alertTime !== null && seconds === alertTime) {
+            alert(`Se alcanzó el tiempo: ${alertTime} segundos`);
+        }
+    }, 1000);
+};
+
+const stopCounter = () => {
+    isRunning = false;
+    clearInterval(interval);
+};
+
+const resetCounter = (start, updateUI) => {
+    stopCounter();
+    seconds = start;
+    updateUI();
+};
+
 const Contador = ({ start = 0, alertTime = null }) => {
-    const [seconds, setSeconds] = useState(start);
-    const [isRunning, setIsRunning] = useState(true);
+    seconds = start;
 
-    useEffect(() => {
-        if (!isRunning) return;
-
-        const interval = setInterval(() => {
-            setSeconds(prev => {
-                if (alertTime !== null && prev + 1 === alertTime) {
-                    alert(`Se alcanzó el tiempo: ${alertTime} segundos`);
-                }
-                return prev + 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isRunning]);
-
-    const handleStart = () => setIsRunning(true);
-    const handleStop = () => setIsRunning(false);
-    const handleReset = () => {
-        setSeconds(start);
-        setIsRunning(false);
+    const updateUI = () => {
+        document.getElementById("time-display").innerText = formatTime(seconds);
     };
 
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 bg-dark text-white">
             <div className="text-center">
-                <h1><i className="fa-solid fa-clock"></i> {formatTime(seconds)}</h1>
-                <button className="btn btn-success m-2" onClick={handleStart}>Iniciar</button>
-                <button className="btn btn-danger m-2" onClick={handleStop}>Detener</button>
-                <button className="btn btn-warning m-2" onClick={handleReset}>Reiniciar</button>
+                <h1><i className="fa-solid fa-clock"></i> <span id="time-display">{formatTime(seconds)}</span></h1>
+                <button className="btn btn-success m-2" onClick={() => startCounter(alertTime, updateUI)}>Iniciar</button>
+                <button className="btn btn-danger m-2" onClick={stopCounter}>Detener</button>
+                <button className="btn btn-warning m-2" onClick={() => resetCounter(start, updateUI)}>Reiniciar</button>
             </div>
         </div>
     );
